@@ -163,10 +163,13 @@ export default function Dashboard() {
                         <Activity className="w-5 h-5 text-indigo-500" />
                         学習バランス
                     </h2>
-                    <div className="h-64 w-full -ml-4">
+                    {/* 親のdivに min-h と min-w を明示的につけるのがコツです */}
+                    <div className="h-64 w-full -ml-4" style={{ minHeight: "250px", minWidth: "100%" }}>
                         {chartData.length > 0 ? (
-                            <ResponsiveContainer width="100%" height="100%">
+                            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+                                {/* ...中身はそのまま... */}
                                 <RadarChart cx="50%" cy="50%" outerRadius="70%" data={chartData}>
+                                    {/* ... (既存のコードそのまま) ... */}
                                     <PolarGrid stroke="#e2e8f0" />
                                     <PolarAngleAxis
                                         dataKey="subject"
