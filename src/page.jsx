@@ -158,43 +158,36 @@ export default function Dashboard() {
                 </div>
 
                 {/* レーダーチャート（自分 vs 平均） */}
-                <div className="bg-white p-6 rounded-3xl shadow-lg shadow-indigo-100/50 border border-indigo-50">
-                    <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                        <Activity className="w-5 h-5 text-indigo-500" />
-                        学習バランス
-                    </h2>
-                    {/* 親のdivに min-h と min-w を明示的につけるのがコツです */}
-                    <div className="w-full h-[300px] mt-2">
-                        {chartData.length > 0 ? (
-                            <ResponsiveContainer width="100%" height="100%">
-                                <RadarChart cx="50%" cy="50%" outerRadius="70%" data={chartData}>
-                                    <PolarGrid stroke="#e2e8f0" />
-                                    <PolarAngleAxis
-                                        dataKey="subject"
-                                        tick={{ fill: '#64748b', fontSize: 11, fontWeight: 600 }}
-                                    />
-                                    <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
-                                    <Radar
-                                        name="正答率(%)"
-                                        dataKey="A"
-                                        stroke="#4f46e5"
-                                        strokeWidth={3}
-                                        fill="#6366f1"
-                                        fillOpacity={0.4}
-                                    />
-                                    <Tooltip
-                                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                                        itemStyle={{ color: '#4f46e5', fontWeight: 'bold' }}
-                                    />
-                                </RadarChart>
-                            </ResponsiveContainer>
-                        ) : (
-                            <div className="h-full flex flex-col items-center justify-center text-slate-400 bg-slate-50 rounded-xl">
-                                <p className="font-bold">データがありません</p>
-                                <p className="text-xs mt-1">問題を解くとここにグラフが表示されます</p>
-                            </div>
-                        )}
-                    </div>
+                <div style={{ width: "100%", height: "300px", minHeight: "300px" }} className="mt-4">
+                    {chartData.length > 0 ? (
+                        <ResponsiveContainer width="100%" height="100%">
+                            <RadarChart cx="50%" cy="50%" outerRadius="70%" data={chartData}>
+                                <PolarGrid stroke="#e2e8f0" />
+                                <PolarAngleAxis
+                                    dataKey="subject"
+                                    tick={{ fill: '#64748b', fontSize: 11, fontWeight: 600 }}
+                                />
+                                <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+                                <Radar
+                                    name="正答率(%)"
+                                    dataKey="A"
+                                    stroke="#4f46e5"
+                                    strokeWidth={3}
+                                    fill="#6366f1"
+                                    fillOpacity={0.4}
+                                />
+                                <Tooltip
+                                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                    itemStyle={{ color: '#4f46e5', fontWeight: 'bold' }}
+                                />
+                            </RadarChart>
+                        </ResponsiveContainer>
+                    ) : (
+                        <div className="h-full flex flex-col items-center justify-center text-slate-400 bg-slate-50 rounded-xl">
+                            <p className="font-bold">データがありません</p>
+                            <p className="text-xs mt-1">問題を解くとここにグラフが表示されます</p>
+                        </div>
+                    )}
                 </div>
 
                 {/* 学習スタートボタン */}
