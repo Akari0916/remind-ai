@@ -164,51 +164,34 @@ export default function Dashboard() {
                         学習バランス
                     </h2>
                     {/* 親のdivに min-h と min-w を明示的につけるのがコツです */}
-                    <div className="h-64 w-full -ml-4" style={{ minHeight: "250px", minWidth: "100%" }}>
+                    <div className="w-full h-[300px] mt-2">
                         {chartData.length > 0 ? (
-                            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
-                                {/* ...中身はそのまま... */}
+                            <ResponsiveContainer width="100%" height="100%">
                                 <RadarChart cx="50%" cy="50%" outerRadius="70%" data={chartData}>
-                                    {/* ... (既存のコードそのまま) ... */}
                                     <PolarGrid stroke="#e2e8f0" />
                                     <PolarAngleAxis
                                         dataKey="subject"
-                                        tick={{ fill: '#64748b', fontSize: 12, fontWeight: 600 }}
+                                        tick={{ fill: '#64748b', fontSize: 11, fontWeight: 600 }}
                                     />
                                     <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
-
-                                    {/* ★ここがポイント: 2つのデータ系列を表示 */}
-
-                                    {/* 1. みんなの平均（薄いオレンジ） */}
                                     <Radar
-                                        name="みんなの平均"
-                                        dataKey="B"
-                                        stroke="#fb923c"
-                                        strokeWidth={2}
-                                        fill="#fb923c"
-                                        fillOpacity={0.2}
-                                    />
-
-                                    {/* 2. あなたの成績（濃い青紫）- 上に重なるように後に書く */}
-                                    <Radar
-                                        name="あなた"
+                                        name="正答率(%)"
                                         dataKey="A"
                                         stroke="#4f46e5"
-                                        strokeWidth={2}
+                                        strokeWidth={3}
                                         fill="#6366f1"
-                                        fillOpacity={0.5}
+                                        fillOpacity={0.4}
                                     />
-
-                                    <Legend />
                                     <Tooltip
                                         contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                        itemStyle={{ color: '#4f46e5', fontWeight: 'bold' }}
                                     />
                                 </RadarChart>
                             </ResponsiveContainer>
                         ) : (
-                            <div className="h-full flex flex-col items-center justify-center text-slate-400">
-                                <p>データがまだありません</p>
-                                <p className="text-sm">問題を解くとグラフが表示されます</p>
+                            <div className="h-full flex flex-col items-center justify-center text-slate-400 bg-slate-50 rounded-xl">
+                                <p className="font-bold">データがありません</p>
+                                <p className="text-xs mt-1">問題を解くとここにグラフが表示されます</p>
                             </div>
                         )}
                     </div>
