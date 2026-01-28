@@ -80,36 +80,35 @@ export default function WeaknessPage() {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
-        // A. 履歴保存
+        // 1. 履歴テーブルへの保存
         await supabase.from("history").insert({
-            user_id: user.id, score: score, total: TOTAL_QUESTIONS,
+            user_id: user.id,
+            score: score,
+            total: TOTAL_QUESTIONS,
             incorrect_ids: logs.filter(l => !l.isCorrect).map(l => l.questionId)
         });
 
-        // B. ログ保存
-        await supabase.from("").insert(
+        // ★診断ログ：実際に送るデータの中身をコンソールに出す
+        console.log("【最終確認】Supabaseに送るデータ:", logs);
+
+        // 2. 詳細ログ(question_logs)への保存
+        const { error } = await supabase.from("question_logs").insert(
             logs.map(log => ({
-                user_id: user.id, question_id: log.questionId, is_correct: log.isCorrect, time_taken_ms: log.timeTaken,
+                user_id: user.id,
+                question_id: log.questionId,
+                is_correct: log.isCorrect,
+                time_taken_ms: log.timeTaken,
+
+                // ★★★ ここが運命の分かれ道です！ ★★★
+                // これがないと、いくら手元にあってもDBには入りません
+                subject: log.subject,
             }))
         );
 
-        // C. ★復習スケジュールの更新 (Upsert)
-        const progressUpdates = logs.map(log => {
-            const currentInterval = progressMap[log.questionId] || 0;
-            const reviewData = calculateNextReview(currentInterval, log.isCorrect);
-
-            return {
-                user_id: user.id,
-                question_id: log.questionId,
-                interval_days: reviewData.interval,
-                next_review_at: reviewData.date
-            };
-        });
-
-        const { error } = await supabase.from('user_progress').upsert(progressUpdates, { onConflict: 'user_id, question_id' });
         if (error) {
-            // eslint-disable-next-line no-console
-            console.error("Progress Error:", error);
+            console.error("【保存失敗】Supabaseエラー:", error);
+        } else {
+            console.log("【保存成功】学習データを保存しました");
         }
     };
 

@@ -29,21 +29,33 @@ export default function QuickPage() {
     useEffect(() => {
         const initQuiz = async () => {
             setLoading(true);
-            const questions = await getAiSuggestedQuestions(TOTAL_QUESTIONS, 'random');
+            try {
+                // AIロジックから問題を取得
+                const questions = await getAiSuggestedQuestions(TOTAL_QUESTIONS, 'random');
 
-            const processed = questions.map(q => {
-                const shuffledChoices = [...q.choices].sort(() => Math.random() - 0.5);
-                return {
-                    ...q,
-                    choices: shuffledChoices,
-                    originalAnswerStr: q.choices[q.answer],
-                    answer: shuffledChoices.indexOf(q.choices[q.answer])
-                };
-            });
+                if (!questions || questions.length === 0) {
+                    console.error("問題のロードに失敗しました");
+                    return;
+                }
 
-            setQuiz(processed);
-            setLoading(false);
-            startTimeRef.current = Date.now();
+                // 選択肢のシャッフル処理
+                const processed = questions.map(q => {
+                    const shuffledChoices = [...q.choices].sort(() => Math.random() - 0.5);
+                    return {
+                        ...q,
+                        choices: shuffledChoices,
+                        originalAnswerStr: q.choices[q.answer],
+                        answer: shuffledChoices.indexOf(q.choices[q.answer])
+                    };
+                });
+
+                setQuiz(processed);
+                setLoading(false);
+                startTimeRef.current = Date.now();
+            } catch (error) {
+                console.error("初期化エラー:", error);
+                setLoading(false);
+            }
         };
 
         initQuiz();
@@ -58,31 +70,49 @@ export default function QuickPage() {
     }, [index]);
 
     const saveData = async () => {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                console.log("ユーザーが見つからないため保存しません");
+                return;
+            }
 
-        // A. 履歴テーブル(history)への保存
-        await supabase.from("history").insert({
-            user_id: user.id,
-            score: score,
-            total: TOTAL_QUESTIONS,
-            incorrect_ids: logs.filter(l => !l.isCorrect).map(l => l.questionId)
-        });
+            // 【診断】送信直前のデータを確認
+            console.log("【最終送信】Supabaseへ送るログデータ:", logs);
 
-        // B. 詳細ログ(question_logs)への保存
-        // ★ここが重要：logsに保存しておいたsubjectを取り出して送信する
-        await supabase.from("question_logs").insert(
-            logs.map(log => ({
+            // A. 履歴テーブル(history)への保存
+            const { error: historyError } = await supabase.from("history").insert({
                 user_id: user.id,
-                question_id: log.questionId,
-                is_correct: log.isCorrect,
-                time_taken_ms: log.timeTaken,
-                subject: log.subject, // ← これがないとNULLになります
-            }))
-        );
+                score: score,
+                total: TOTAL_QUESTIONS,
+                incorrect_ids: logs.filter(l => !l.isCorrect).map(l => l.questionId)
+            });
 
-        // eslint-disable-next-line no-console
-        console.log("学習データを保存しました");
+            if (historyError) console.error("History保存エラー:", historyError);
+
+            // B. 詳細ログ(question_logs)への保存
+            // ★ここが最重要：logsに保存しておいたsubjectを取り出して送信する
+            const { error: logsError } = await supabase.from("question_logs").insert(
+                logs.map(log => ({
+                    user_id: user.id,
+                    question_id: log.questionId,
+                    is_correct: log.isCorrect,
+                    time_taken_ms: log.timeTaken,
+
+                    // JSONにカテゴリがない場合の保険として "未分類" をセット
+                    subject: log.subject || "未分類",
+                }))
+            );
+
+            if (logsError) {
+                console.error("詳細ログ保存エラー:", logsError);
+            } else {
+                console.log("✅ 学習データを正常に保存しました (Subject含む)");
+            }
+
+        } catch (error) {
+            console.error("saveData関数内で予期せぬエラー:", error);
+        }
     };
 
     // 3. 回答時の処理
@@ -93,6 +123,9 @@ export default function QuickPage() {
         const timeTaken = endTime - startTimeRef.current;
         const currentQ = quiz[index];
         const isAnswerCorrect = choiceIndex === currentQ.answer;
+
+        // 【診断】回答時点でのデータ確認
+        console.log(`【回答】ID:${currentQ.id}, 教科:${currentQ.category}`);
 
         // 状態更新
         setSelected(choiceIndex);
