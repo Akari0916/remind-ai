@@ -1,0 +1,122 @@
+@import "tailwindcss";
+
+@theme {
+    --font-sans: var(--font-noto-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+    --bg-color: #F8FAFC;
+    /* 全体の背景: Slate-50 */
+    --primary-text: #334155;
+    /* 文字: Slate-700 */
+    --muted-text: #94A3B8;
+    /* 薄い文字: Slate-400 */
+    --border-color: #E2E8F0;
+    /* 線: Slate-200 */
+    --accent-color: #334155;
+    /* メイン色: Slate-700 */
+}
+
+/* --- レイアウト (PCのカード枠を廃止) --- */
+
+/* アプリ全体のコンテナ */
+.app-container {
+    @apply min-h-screen font-sans bg-[#F8FAFC] text-slate-800;
+}
+
+/* メインコンテンツ枠 */
+.main-card {
+    @apply w-full mx-auto min-h-screen bg-white shadow-sm flex flex-col;
+
+    /* PC向け: 画面幅を制限するが、カード枠（線）は見せない */
+    @media (min-width: 640px) {
+        @apply max-w-2xl min-h-screen shadow-xl border-x border-slate-100;
+    }
+}
+
+/* ヘッダー */
+.app-header {
+    @apply px-6 py-4 flex justify-between items-center bg-white/80 backdrop-blur-md sticky top-0 z-20 border-b border-slate-100;
+}
+
+/* コンテンツエリア */
+.content-area {
+    @apply flex-1 p-6 space-y-8 bg-white;
+}
+
+/* --- Vercel Toolbar & Next.js Indicator 強制排除 --- */
+/* これで確実に消えます */
+[data-nextjs-toast],
+div[class*="nextjs-toast"],
+#next-route-announcer,
+vercel-live-feedback {
+    display: none !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+/* --- コンポーネント --- */
+
+.btn-logout {
+    @apply text-xs font-bold px-4 py-2 rounded-full border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors;
+}
+
+.dashboard-section {
+    @apply space-y-4;
+}
+
+.section-title {
+    @apply text-xs font-bold tracking-widest text-slate-400 uppercase flex items-center gap-2;
+}
+
+/* グラフエリア */
+.graph-box {
+    /* flex, items-center, justify-center を削除しました */
+    @apply bg-slate-50 rounded-3xl p-6 h-[320px] border border-slate-100 relative;
+}
+
+/* ステータスカード */
+.stat-card {
+    @apply bg-slate-50 p-6 rounded-2xl text-center border border-slate-100;
+}
+
+.stat-label {
+    @apply text-xs font-bold text-slate-400 uppercase tracking-widest mb-2;
+}
+
+.stat-value {
+    @apply text-4xl font-light text-slate-800;
+}
+
+/* アクションボタン */
+.action-card-primary {
+    @apply block relative overflow-hidden rounded-2xl p-6 bg-slate-800 shadow-lg shadow-slate-200 transition-transform active:scale-[0.98];
+}
+
+.primary-text-main {
+    @apply text-white font-bold text-xl;
+}
+
+.primary-text-sub {
+    @apply text-slate-300 text-sm mt-1;
+}
+
+.icon-circle-dark {
+    @apply bg-white/10 p-3 rounded-xl text-white inline-block;
+}
+
+.action-card-secondary {
+    @apply block rounded-2xl p-6 bg-white border border-slate-200 shadow-sm hover:bg-slate-50 transition-colors active:scale-[0.98];
+}
+
+.secondary-text-main {
+    @apply text-slate-700 font-bold text-xl;
+}
+
+.secondary-text-sub {
+    @apply text-slate-400 text-sm mt-1;
+}
+
+.icon-circle-light {
+    @apply bg-slate-100 p-3 rounded-xl text-slate-600 inline-block;
+}
