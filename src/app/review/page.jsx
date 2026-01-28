@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabase";
 import { calculateNextReview } from "../../utils/reviewLogic";
-import questionsData from "../../data/fe_questions.json";
+import questionsData from "../../data/fe_questions.json"; // ※データのパスが正しいか要確認
 import QuestionCard from "../../components/QuestionCard";
 import Link from "next/link";
 import { Home, CheckCircle, Repeat } from "lucide-react";
@@ -63,6 +63,10 @@ export default function ReviewPage() {
         if (showFeedback) return;
         const isAnswerCorrect = choiceIndex === currentQ.answer;
 
+        // ★★★ 1. ここでコンソールに出す！ ★★★
+        console.log("【診断】今の問題データ丸ごと:", currentQ);
+        console.log("【診断】教科名は？:", currentQ.category);
+
         setSelected(choiceIndex);
         setIsCorrect(isAnswerCorrect);
         setShowFeedback(true);
@@ -78,16 +82,25 @@ export default function ReviewPage() {
             next_review_at: reviewData.date
         }, { onConflict: 'user_id, question_id' });
 
+        // ★★★ 2. 送信データを確認＆予備データを入れる ★★★
+        const subjectToSend = currentQ.category || "データなし(プログラムは動いている)";
+
+        console.log("【診断】Supabaseに送る教科名:", subjectToSend);
+
         await supabase.from("question_logs").insert({
-            user_id: user.id, question_id: currentQ.id, is_correct: isAnswerCorrect, time_taken_ms: 0
+            user_id: user.id,
+            question_id: currentQ.id,
+            is_correct: isAnswerCorrect,
+            time_taken_ms: 0,
+
+            // もし category が空なら "データなし..." という文字を保存する
+            subject: subjectToSend
         });
 
         setTimeout(() => {
             setShowFeedback(false); setSelected(null); setIsCorrect(null);
-
             const nextQueue = reviewQueue.slice(1);
             setReviewQueue(nextQueue);
-
             if (nextQueue.length > 0) {
                 setCurrentQ(nextQueue[0]);
             } else {

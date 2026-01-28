@@ -87,7 +87,7 @@ export default function WeaknessPage() {
         });
 
         // B. ログ保存
-        await supabase.from("question_logs").insert(
+        await supabase.from("").insert(
             logs.map(log => ({
                 user_id: user.id, question_id: log.questionId, is_correct: log.isCorrect, time_taken_ms: log.timeTaken,
             }))

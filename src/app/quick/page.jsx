@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { supabase } from "../../lib/supabase"; // 相対パスで確実に指定
+import { supabase } from "../../lib/supabase";
 import { getAiSuggestedQuestions } from "../../utils/aiLogic";
 import QuestionCard from "../../components/QuestionCard";
 import ResultScreen from "../../components/ResultScreen";
@@ -9,7 +9,7 @@ import Link from "next/link";
 import { Home, Loader2 } from "lucide-react";
 
 export default function QuickPage() {
-    const TOTAL_QUESTIONS = 5; // テスト用に5問に設定
+    const TOTAL_QUESTIONS = 5;
     const [quiz, setQuiz] = useState([]);
     const [index, setIndex] = useState(0);
     const [score, setScore] = useState(0);
@@ -30,20 +30,20 @@ export default function QuickPage() {
         const initQuiz = async () => {
             setLoading(true);
             const questions = await getAiSuggestedQuestions(TOTAL_QUESTIONS, 'random');
-            // 選択肢をシャッフルする処理
+
             const processed = questions.map(q => {
                 const shuffledChoices = [...q.choices].sort(() => Math.random() - 0.5);
                 return {
                     ...q,
                     choices: shuffledChoices,
-                    originalAnswerStr: q.choices[q.answer], // 元の正解文字列
-                    answer: shuffledChoices.indexOf(q.choices[q.answer]) // 新しい正解インデックス
+                    originalAnswerStr: q.choices[q.answer],
+                    answer: shuffledChoices.indexOf(q.choices[q.answer])
                 };
             });
 
             setQuiz(processed);
             setLoading(false);
-            startTimeRef.current = Date.now(); // タイマースタート
+            startTimeRef.current = Date.now();
         };
 
         initQuiz();
@@ -59,7 +59,7 @@ export default function QuickPage() {
 
     const saveData = async () => {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return; // 未ログインなら保存しない
+        if (!user) return;
 
         // A. 履歴テーブル(history)への保存
         await supabase.from("history").insert({
@@ -69,13 +69,15 @@ export default function QuickPage() {
             incorrect_ids: logs.filter(l => !l.isCorrect).map(l => l.questionId)
         });
 
-        // B. 詳細ログ(question_logs)への保存（これがAIの餌になる）
+        // B. 詳細ログ(question_logs)への保存
+        // ★ここが重要：logsに保存しておいたsubjectを取り出して送信する
         await supabase.from("question_logs").insert(
             logs.map(log => ({
                 user_id: user.id,
                 question_id: log.questionId,
                 is_correct: log.isCorrect,
                 time_taken_ms: log.timeTaken,
+                subject: log.subject, // ← これがないとNULLになります
             }))
         );
 
@@ -85,7 +87,7 @@ export default function QuickPage() {
 
     // 3. 回答時の処理
     const handleAnswer = (choiceIndex) => {
-        if (showFeedback) return; // 連打防止
+        if (showFeedback) return;
 
         const endTime = Date.now();
         const timeTaken = endTime - startTimeRef.current;
@@ -100,25 +102,26 @@ export default function QuickPage() {
         if (isAnswerCorrect) setScore(prev => prev + 1);
 
         // ログ記録
+        // ★ここが重要：回答した瞬間に教科名(category)をsubjectとして記録しておく
         setLogs(prev => [...prev, {
             questionId: currentQ.id,
             isCorrect: isAnswerCorrect,
-            timeTaken: timeTaken
+            timeTaken: timeTaken,
+            subject: currentQ.category, // ← これ！
         }]);
 
-        // 次の問題へ（1.5秒後）
+        // 次の問題へ
         setTimeout(() => {
             setShowFeedback(false);
             setSelected(null);
             setIsCorrect(null);
             setIndex(prev => prev + 1);
-            startTimeRef.current = Date.now(); // タイマーリセット
+            startTimeRef.current = Date.now();
         }, 1500);
     };
 
     // --- レンダリング部分 ---
 
-    // ロード中
     if (loading) {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 text-indigo-600">
@@ -128,16 +131,13 @@ export default function QuickPage() {
         );
     }
 
-    // 結果画面
     if (index >= TOTAL_QUESTIONS) {
         return <ResultScreen score={score} total={TOTAL_QUESTIONS} onRetry={() => window.location.reload()} />;
     }
 
-    // クイズ画面
     return (
         <div className="min-h-screen bg-gray-50 py-8 px-4">
             <div className="max-w-2xl mx-auto">
-                {/* ヘッダー */}
                 <div className="flex justify-between items-center mb-6">
                     <Link href="/" className="flex items-center gap-2 text-gray-500 hover:text-indigo-600 transition">
                         <Home className="w-5 h-5" />
@@ -148,7 +148,6 @@ export default function QuickPage() {
                     </div>
                 </div>
 
-                {/* プログレスバー */}
                 <div className="w-full bg-gray-200 h-2 rounded-full mb-8 overflow-hidden">
                     <div
                         className="bg-indigo-500 h-full transition-all duration-500 ease-out"
@@ -156,7 +155,6 @@ export default function QuickPage() {
                     />
                 </div>
 
-                {/* 問題カード */}
                 <QuestionCard
                     question={quiz[index]}
                     selected={selected}
